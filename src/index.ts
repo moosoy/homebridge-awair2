@@ -585,6 +585,7 @@ class AwairPlatform implements DynamicPlatformPlugin {
 
 	    if (device.deviceType !== 'awair-mint' && device.deviceType !== 'awair-glow-c') {
 	      accessory.addService(hap.Service.CarbonDioxideSensor, `${device.name} CO2`);
+        accessory.addService(hap.Service.TemperatureSensor, `${device.name} CO2 Level`, 'CO2');
 	    }
 
       // If you are adding more than one service of the same type to an accessory, you need to give the service a "name" and "subtype".
@@ -686,9 +687,9 @@ class AwairPlatform implements DynamicPlatformPlugin {
 	        .setCharacteristic(hap.Characteristic.VOCDensity, 0);
 	    } else if (accessory.context.devType === 'awair') {
 	      airQualityService
-	        .setCharacteristic(hap.Characteristic.AirQuality, 100)
-	        .setCharacteristic(hap.Characteristic.VOCDensity, 0)
-	        .setCharacteristic(hap.Characteristic.PM10Density, 0);
+	        .setCharacteristic(hap.Characteristic.AirQuality, 100);
+	        // .setCharacteristic(hap.Characteristic.VOCDensity, 0)
+	        // .setCharacteristic(hap.Characteristic.PM10Density, 0);
 	    } else if ((accessory.context.devType === 'awair-mint') || (accessory.context.devType === 'awair-omni') || 
 					(accessory.context.devType === 'awair-r2') || (accessory.context.devType === 'awair-element')) {
 	      airQualityService
@@ -730,6 +731,19 @@ class AwairPlatform implements DynamicPlatformPlugin {
 	    if (carbonDioxideService) {
 	      carbonDioxideService
 	        .setCharacteristic(hap.Characteristic.CarbonDioxideLevel, 0);
+	    }
+      const co2ValueService = accessory.getService(`${accessory.context.name} CO2 Level`);
+	    if (co2ValueService) {
+        co2ValueService
+          .getCharacteristic(hap.Characteristic.CurrentTemperature)
+          .setProps({
+            minValue: 400,
+            maxValue: 5000,
+            minStep: 1,
+            unit: 'ppm',
+          });
+	      co2ValueService
+	        .setCharacteristic(hap.Characteristic.CurrentTemperature, 800);
 	    }
 	  }
 
@@ -839,11 +853,18 @@ class AwairPlatform implements DynamicPlatformPlugin {
 	      const sensors: any = data
 	        .map(sensor => sensor.sensors) // create sensors data array of length 'this.limit'
 	        .reduce((a, b) => a.concat(b)) // flatten array of sensors (which is an array) to single-level array
+          .filter((sensor: { comp: string; }) => !['voc', 'pm10', 'pm25', 'dust'].includes(sensor.comp))
 	        .reduce((a: any, b: any) => {
 	          a[b.comp] = a[b.comp] ? 0.5*(a[b.comp] + b.value) : b.value; 
 	          return a; // return time weighted average
 	        }, []); // pass empty array as initial value
 
+        this.log(`[${accessory.context.serial}] sensors: ${JSON.stringify(sensors)}`);
+
+        const co2ValueService = accessory.getService(`${accessory.context.name} CO2 Level`);
+        if (co2ValueService) {
+          co2ValueService.updateCharacteristic(hap.Characteristic.CurrentTemperature, parseFloat(sensors['co2']));
+        }
 	      // determine average Awair score over data samples
 	      const score = data.reduce((a, b) => a + b.score, 0) / data.length;
 				

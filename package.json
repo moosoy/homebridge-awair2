@@ -38,18 +38,18 @@
     "LICENSE",
     "README.md",
     "CHANGELOG.md",
-    "dist/**/*",
+    "index.js",
     "config.schema.json",
     "package.json"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/DMBlakeley/homebridge-awair2.git"
+    "url": "git://github.com/moosoy/homebridge-awair2.git"
   },
   "bugs": {
-    "url": "https://github.com/DMBlakeley/homebridge-awair2/issues"
+    "url": "https://github.com/moosoy/homebridge-awair2/issues"
   },
-  "homepage": "https://github.com/DMBlakeley/homebridge-awair2#readme",
+  "homepage": "https://github.com/moosoy/homebridge-awair2#readme",
   "devDependencies": {
     "@types/node": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^5.7.0",
